@@ -1,0 +1,144 @@
+query GetSessions {
+	publicWorkoutSessions(filters: { tag: "demo" }, configuration: {difficulty: EASY}) {
+		edges {
+			node {
+				...WorkoutPreviewItem
+			}
+		}
+	}
+}
+
+
+query GetSession($id: ID!) {
+	publicWorkoutSession(globalId: $id, configuration: {difficulty: EASY}) {
+		... on WorkoutBlockSession {
+			...WorkoutBlockSessionItem
+		}
+		... on WorkoutVideoSession {
+			...WorkoutVideoSessionItem
+		}
+	}
+}
+
+# ------ Fragments ------
+
+fragment WorkoutPreviewItem on WorkoutPreview {
+	id: globalId
+	type
+	duration
+	name
+	format
+	picture
+}
+
+
+fragment WorkoutBlockSessionItem on WorkoutBlockSession {
+	audioSets {
+		...AudioSetItem
+	}
+	duration
+	exercises {
+		...WorkoutExerciseItem
+	}
+	id: globalId
+	sections {
+		...WorkoutSectionItem
+	}
+	name
+	type
+}
+
+fragment AudioSetItem on AudioSet {
+	duration
+	audioFile
+	id
+	text
+	textPhonetic
+}
+
+fragment WorkoutExerciseItem on WorkoutExercise {
+	id
+	name
+	execution
+	duration
+	cover
+}
+
+fragment WorkoutSectionItem on WorkoutSection {
+	id
+	type
+	duration
+	calories
+	executionMode
+	name
+	optional
+	premium
+	tasks {
+		... on TaskExercise {
+			audioSets { ...AudioSetsItem }
+			effortType
+			noSeries
+			nbSeries
+			exerciseId
+			side
+			nbRepetition
+			duration
+			asymmetricType
+			progressionSegment
+			video { ...WorkoutVideoItem }
+		}
+
+		... on TaskRest {
+			audioSets { ... AudioSetsItem }
+			restTaskType
+			restTime
+			video { ...WorkoutVideoItem }
+		}
+	}
+}
+
+fragment WorkoutVideoItem on WorkoutVideo {
+	cover
+	textPrimaryColor
+	textSecondaryColor
+	tintColor
+	video
+}
+
+fragment AudioSetsItem on AudioSetTask {
+	audioSetsId
+	timestamp
+	type
+}
+
+fragment WorkoutVideoSessionItem on WorkoutVideoSession {
+	duration
+	id
+	name
+	reference
+	sections {
+		...WorkoutVideoSessionSectionItem
+	}
+	video {
+		...WorkoutVideoSessionVideoItem
+	}
+}
+
+fragment WorkoutVideoSessionSectionItem on WorkoutVideoSessionSection {
+	id
+	type
+	start
+	end
+	calories
+	optional
+	name
+	skipLabel
+}
+
+fragment WorkoutVideoSessionVideoItem on WorkoutVideoSessionVideo {
+	cover
+	end
+	start
+	textPrimaryColor
+	url
+}

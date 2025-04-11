@@ -9,12 +9,13 @@ import okhttp3.OkHttpClient
 
 
 object CloudClient {
-    private const val CLOUD_URL = "https://cloud.dev.martha.aws.fizzup.com/graphql"
     private lateinit var applicationContext: Context
+    private lateinit var serverUrl: String
 
     // Initialize with context from your Application class
-    fun initialize(context: Context) {
+    fun initialize(context: Context, serverUrl: String) {
         applicationContext = context.applicationContext
+        this.serverUrl = serverUrl
     }
 
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder().build()
@@ -22,7 +23,7 @@ object CloudClient {
     val apolloClient: ApolloClient by lazy {
         ApolloClient.Builder()
             .okHttpClient(okHttpClient)
-            .serverUrl(CLOUD_URL)
+            .serverUrl(serverUrl)
             .addHttpHeader(
                 "X-WorkoutKit-Device",
                 DeviceIdHelper.getDeviceId(applicationContext)

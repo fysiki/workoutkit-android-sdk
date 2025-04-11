@@ -12,4 +12,8 @@ class WorkoutRepository {
     suspend fun getDemoWorkout(id: String): ApolloResponse<GetSessionQuery.Data> {
         return apolloClient.query(GetSessionQuery(id)).execute()
     }
+
+    suspend fun getDemoWorkoutContent(id: String): ApolloResponse<GetSessionContentQuery.Data> {
+        return apolloClient.query(GetSessionContentQuery(id)).execute()
+    }
 }

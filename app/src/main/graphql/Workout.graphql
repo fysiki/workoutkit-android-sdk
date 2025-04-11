@@ -1,5 +1,5 @@
 query GetSessions {
-	publicWorkoutSessions(filters: { tag: "demo" }, configuration: {difficulty: EASY}) {
+	publicWorkouts(filters: { tag: "demo" }, configuration: {difficulty: EASY}) {
 		edges {
 			node {
 				...WorkoutPreviewItem
@@ -8,8 +8,13 @@ query GetSessions {
 	}
 }
 
-
 query GetSession($id: ID!) {
+	publicWorkout(globalId: $id) {
+		...WorkoutPreviewItem
+	}
+}
+
+query GetSessionContent($id: ID!) {
 	publicWorkoutSession(globalId: $id, configuration: {difficulty: EASY}) {
 		... on WorkoutBlockSession {
 			...WorkoutBlockSessionItem

@@ -10,6 +10,7 @@ plugins {
 android {
     namespace = "com.fysiki.workoutkitsdkdemo"
     compileSdk = 34
+    buildFeatures.buildConfig = true
 
     defaultConfig {
         applicationId = "com.fysiki.workoutkitsdkdemo"
@@ -20,6 +21,18 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
+
+        val properties = Properties()
+        try {
+            val localProperties = rootProject.layout.projectDirectory.file("local.properties").asFile
+            properties.load(localProperties.inputStream())
+            val rawUrl = properties.getProperty("GraphQLServerUrl", "")
+            val quotedUrl = "\"$rawUrl\""
+            buildConfigField("String", "CLOUD_URL", quotedUrl)
+        } catch (e: Exception) {
+            buildConfigField("String", "CLOUD_URL", "\"\"") // Empty string fallback
+            project.logger.warn("Failed to load GraphQLServerUrl from local.properties: ${e.message}")
+        }
     }
 
     buildTypes {

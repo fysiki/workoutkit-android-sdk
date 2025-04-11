@@ -1,6 +1,5 @@
 package com.fysiki.workoutkitsdkdemo
 
-import MainActivityViewModel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,8 +18,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +29,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fysiki.workoutkit.WorkoutKit
-import com.fysiki.workoutkit.utils.DeviceIdHelper
 import com.fysiki.workoutkitsdkdemo.type.WorkoutFormat
 import org.json.JSONObject
 
@@ -39,12 +39,11 @@ class MainActivity : ComponentActivity() {
 
         // Init workout kit sdk
         WorkoutKit.initialize(application)
-        CloudClient.initialize(application)
+        CloudClient.initialize(application, BuildConfig.CLOUD_URL)
 
         val viewModel = MainActivityViewModel.Factory(
-            WorkoutRepository(),
-            DeviceIdHelper.getDeviceId(this),
-            packageName).create(MainActivityViewModel::class.java)
+            WorkoutRepository()
+        ).create(MainActivityViewModel::class.java)
 
         viewModel.getDemoWorkouts()
 
@@ -60,6 +59,52 @@ class MainActivity : ComponentActivity() {
         setContent {
             val itemList = viewModel.workouts.observeAsState(initial = emptyList())
             val isLoaderDisplayed = viewModel.isLoading.observeAsState(initial = true)
+            val workoutPreview = viewModel.workoutPreviewItemToDisplay.observeAsState(initial = null)
+            val error = viewModel.error.observeAsState(initial = null)
+
+            error.value?.let { errorMessage ->
+                val onDismiss = {
+                    viewModel.resetError()
+                }
+                AlertDialog(
+                    onDismissRequest = onDismiss,
+                    title = { Text(text = "Erreur") },
+                    text = { Text(text = errorMessage) },
+                    confirmButton = {
+                        TextButton(onClick = onDismiss) {
+                            Text("Ok")
+                        }
+                    }
+                )
+            }
+
+            workoutPreview.value?.let { previewData ->
+                val onDismiss = {
+                    viewModel.resetWorkoutPreviewDialog()
+                }
+                AlertDialog(
+                    onDismissRequest = onDismiss,
+                    title = { Text(text = previewData.title) },
+                    text = { Text(text = previewData.body) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.getDemoWorkoutContent(
+                                previewData.id,
+                                previewData.format == WorkoutFormat.PLAY
+                            )
+                            onDismiss.invoke()
+                        }) {
+                            Text("Ok")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = onDismiss) {
+                            Text("Annuler")
+                        }
+                    }
+                )
+            }
+
             WorkoutKitTestTheme {
                 if (isLoaderDisplayed.value) {
                     Box {
@@ -67,8 +112,13 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 Column(
-                    modifier = Modifier.fillMaxSize().background(Color.Black).systemBarsPadding().windowInsetsPadding(
-                        WindowInsets.navigationBars),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black)
+                        .systemBarsPadding()
+                        .windowInsetsPadding(
+                            WindowInsets.navigationBars
+                        ),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -89,7 +139,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         items(items = itemList.value) {
                             WorkoutTile(it) { id ->
-                                viewModel.getDemoWorkout(id, it.format == WorkoutFormat.PLAY)
+                                viewModel.getDemoWorkout(id)
                             }
                         }
                     }

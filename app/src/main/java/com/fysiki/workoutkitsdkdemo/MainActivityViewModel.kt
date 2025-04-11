@@ -1,21 +1,17 @@
+package com.fysiki.workoutkitsdkdemo
+
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.apollographql.apollo.api.toJson
-import com.fysiki.workoutkit.utils.JWTVerifier
-import com.fysiki.workoutkitsdkdemo.Workout
-import com.fysiki.workoutkitsdkdemo.WorkoutRepository
 import com.fysiki.workoutkitsdkdemo.type.WorkoutFormat
 import com.fysiki.workoutkitsdkdemo.type.WorkoutType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.util.Date
-
-// ... (Assuming WorkoutRepository, WorkoutBlockSessionItem, and the response data classes are defined elsewhere)
 
 data class WorkoutPreview(
     val id: String,
@@ -26,22 +22,24 @@ data class WorkoutPreview(
     val picture: Any?,
 )
 
+data class WorkoutPreviewDialogData(
+    val id: String,
+    val title: String,
+    val body: String,
+    val format: WorkoutFormat,
+)
+
 class MainActivityViewModel(
-    private val workoutRepository: WorkoutRepository,
-    private val deviceUuid: String,
-    private val packageName: String
+    private val workoutRepository: WorkoutRepository
 ) : ViewModel() {
 
-    // MainActivityViewModel Factory
     class Factory(
-        private val workoutRepository: WorkoutRepository,
-        private val deviceUuid: String,
-        private val packageName: String
+        private val workoutRepository: WorkoutRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MainActivityViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return MainActivityViewModel(workoutRepository, deviceUuid, packageName) as T
+                return MainActivityViewModel(workoutRepository) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
@@ -60,15 +58,18 @@ class MainActivityViewModel(
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
 
+    private val _workoutPreviewItemToDisplay = MutableLiveData<WorkoutPreviewDialogData?>(null)
+    val workoutPreviewItemToDisplay: LiveData<WorkoutPreviewDialogData?> = _workoutPreviewItemToDisplay
+
     fun getDemoWorkouts() {
         _isLoading.value = true
         _error.value = null
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = withContext(Dispatchers.IO) {
                     workoutRepository.getDemoWorkouts()
                 }
-                val workoutPreviews = response.data?.publicWorkoutSessions?.edges?.map { edge ->
+                val workoutPreviews = response.data?.publicWorkouts?.edges?.map { edge ->
                     val item = edge.node.workoutPreviewItem
                     WorkoutPreview(
                         id = item.id,
@@ -79,23 +80,23 @@ class MainActivityViewModel(
                         picture = item.picture
                     )
                 } ?: emptyList()
-                _workouts.value = workoutPreviews
+                _workouts.postValue(workoutPreviews)
             } catch (e: Exception) {
-                _error.value = "Failed to load workouts: ${e.message}"
+                _error.postValue("Impossible de récupérer les séances.")
             } finally {
-                _isLoading.value = false
+                _isLoading.postValue(false)
             }
         }
     }
 
-    fun getDemoWorkout(id: String, isVideo: Boolean) {
-        // Similar to getDemoWorkouts, but for a single workout
+    fun getDemoWorkoutContent(id: String, isVideo: Boolean) {
         _isLoading.value = true
         _error.value = null
+        val errorMessage = "Impossible d’ouvrir la séance avec l’ID « $id »."
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = withContext(Dispatchers.IO) {
-                    workoutRepository.getDemoWorkout(id)
+                    workoutRepository.getDemoWorkoutContent(id)
                 }
                 val json = response.data?.toJson()?.let {
                     JSONObject(it).optJSONObject("publicWorkoutSession")
@@ -109,6 +110,39 @@ class MainActivityViewModel(
                             extensions["token"].toString()
                         )
                     )
+                } else {
+                    _error.postValue(errorMessage)
+                }
+            } catch (e: Exception) {
+                _error.postValue(errorMessage)
+            } finally {
+                _isLoading.postValue(false)
+            }
+        }
+    }
+
+    fun getDemoWorkout(id: String) {
+        _isLoading.value = true
+        _error.value = null
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    workoutRepository.getDemoWorkout(id)
+                }
+                val workoutPreviewItem = response.data?.publicWorkout?.workoutPreviewItem
+                if (workoutPreviewItem != null) {
+                    _workoutPreviewItemToDisplay.postValue(
+                        WorkoutPreviewDialogData(
+                            workoutPreviewItem.id,
+                            workoutPreviewItem.name,
+                            "Vous allez télécharger les contenus pour cette séance.",
+                            workoutPreviewItem.format
+                        )
+                    )
+                } else {
+                    _error.postValue(
+                        "Impossible de récupérer les informations de la séance pour l’ID « $id »."
+                    )
                 }
             }
              catch (e: Exception) {
@@ -117,5 +151,13 @@ class MainActivityViewModel(
                 _isLoading.postValue(false)
             }
         }
+    }
+
+    fun resetWorkoutPreviewDialog() {
+        _workoutPreviewItemToDisplay.value = null
+    }
+
+    fun resetError() {
+        _error.value = null
     }
 }

@@ -1,6 +1,5 @@
 package com.fysiki.workoutkitsdkdemo
 
-import WorkoutPreview
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

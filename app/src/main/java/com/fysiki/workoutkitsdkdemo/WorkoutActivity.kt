@@ -60,21 +60,6 @@ class WorkoutActivity : AppCompatActivity(), WorkoutKitInterface {
             ))
         }
 
-        /*
-        Disabled for test app
-        val quitReasons = arrayListOf(
-            Choice(
-                label = "Trop long",
-                value = Tracking.Value.REASON_DISLIKE_EXERCISES
-            ),
-            Choice(
-                label = "Autres raisons",
-                value = Tracking.Value.REASON_OTHER
-            )
-        )
-        workoutConfig.put("quit_reasons", Gson().toJson(quitReasons))
-        */
-
         val goFragment = GoFragment.newInstance(
             workoutContent,
             workoutConfig,

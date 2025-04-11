@@ -4,8 +4,8 @@
 
 - "Licensor" refers to FIZZUP SAS.
 - "Licensee" refers to the entity that has obtained a valid commercial license for the SDK.
-- "WorkoutKit SDK" refers to the proprietary, compiled software library provided by the Licensor, under `FZWorkoutKit.xcframework` directory.
-- "Example Code" refers to the source code provided in this repository to illustrate the integration and usage of the SDK, under the `demo` directory.
+- "WorkoutKit SDK" refers to the proprietary, compiled software library provided by the Licensor.
+- "Example Code" refers to the source code provided in this repository to illustrate the integration and usage of the SDK, under the `app` directory.
 
 ## 2. GRANT OF LICENSE
 

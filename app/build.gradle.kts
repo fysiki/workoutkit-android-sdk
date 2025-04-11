@@ -17,7 +17,7 @@ android {
         minSdk = 21
         targetSdk = 35
         versionCode = System.getenv("GITHUB_VERSION_CODE")?.toInt() ?: 1
-        versionName = System.getenv("GITHUB_VERSION") ?: "v16"
+        versionName = System.getenv("GITHUB_VERSION") ?: "v17"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
@@ -128,7 +128,7 @@ dependencies {
     implementation(libs.apollo.graphql)
 
 
-    version = System.getenv("GITHUB_VERSION") ?: "v16"
+    version = System.getenv("GITHUB_VERSION") ?: "v17"
 
     api("com.fysiki:workoutkit:$version")
 

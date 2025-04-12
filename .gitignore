@@ -1,3 +1,4 @@
-SampleApp/.idea
-SampleApp/gradle
 .DS_Store
+.gradle
+.idea
+local.properties
